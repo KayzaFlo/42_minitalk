@@ -6,13 +6,13 @@
 /*   By: fgeslin <fgeslin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/31 12:57:35 by fgeslin           #+#    #+#             */
-/*   Updated: 2023/02/07 14:01:52 by fgeslin          ###   ########.fr       */
+/*   Updated: 2023/02/07 16:59:57 by fgeslin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
 
-void	send_bit(unsigned char c, int size, int pid)
+void	send_bit(uint32_t c, size_t size, int pid)
 {
 	if (c >= size)
 	{
@@ -23,47 +23,48 @@ void	send_bit(unsigned char c, int size, int pid)
 	{
 		kill(pid, SIGUSR2);
 	}
-	usleep(100);
+	usleep(40);
 	if (size <= 1)
 		return ;
 	send_bit(c, size / 2, pid);
 }
 
+static void	inputreceived(int signum)
+{
+	if (signum == SIGUSR1)
+		ft_printf(KYEL"-"KNRM"message received"KYEL"-\n"KNRM);
+}
+
+static void	init_sigs(struct sigaction *sa)
+{
+	sa->sa_handler = inputreceived;
+	sigemptyset(&sa->sa_mask);
+	sa->sa_flags = SA_RESTART;
+	if (sigaction(SIGUSR1, sa, NULL) == -1)
+		exit (-1);
+	if (sigaction(SIGUSR2, sa, NULL) == -1)
+		exit (-1);
+}
+
 int	main(int argc, char const *argv[])
 {
-	pid_t		server_pid;
-	// pid_t	pid;
-	char		*to_send;
-	int			len;
-	int			size;
-
-	// char happy[] = { 0xe2, 0x98, 0xba };
-	// char happy[] = { -16, -97, -115, -114 };
-
-	// write(1, happy, 4);
-	// ft_printf("\n%u\t%x\n", happy[0], argv[2][0]);
-	// ft_printf("\n%x\t%x\n", happy[1], argv[2][1]);
-	// ft_printf("\n%x\t%x\n", happy[2], argv[2][2]);
-	// ft_printf("\n%x\t%x\n", happy[3], argv[2][3]);
-	// ft_printf("\n%x\t%x\n", happy[0], argv[2][4]);
-	// ft_printf("\n%x\t%x\n", happy[0], argv[2][5]);
-	// ft_printf("\n%x\t%x\n", happy[0], argv[2][6]);
-	// ft_printf("\n%s\n", argv[2]);
+	struct sigaction	sa;
+	pid_t				server_pid;
+	char				*to_send;
 
 	if (argc != 3 || !argv)
 		return (0);
 	server_pid = atoi(argv[1]);
-	// pid = getpid();
-	size = 128;
-	len = ft_strlen(argv[2]);					//|
-	send_bit(len, size, server_pid);			//|SEND LEN
-	send_bit(0, size, server_pid);				// SEND SEP (0)
-	to_send = (char *)argv[2];					//|-----
-	while (*to_send)							//|
-	{											//|
-		send_bit(*to_send, size, server_pid);	//|SEND STR
-		to_send++;								//|
-	}											//|-----
-	send_bit(*to_send, size, server_pid);		// SEND SEP (0)
+	init_sigs(&sa);
+	send_bit(getpid(), 2147483648, server_pid);
+	send_bit(ft_strlen(argv[2]), 2147483648, server_pid);
+	send_bit(0, 2147483648, server_pid);
+	to_send = (char *)argv[2];
+	while (*to_send)
+	{
+		send_bit((unsigned char)*to_send, 128, server_pid);
+		to_send++;
+	}
+	send_bit(*to_send, 128, server_pid);
 	return (0);
 }

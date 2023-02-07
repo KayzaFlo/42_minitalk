@@ -6,7 +6,7 @@
 /*   By: fgeslin <fgeslin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/31 12:57:33 by fgeslin           #+#    #+#             */
-/*   Updated: 2023/02/07 14:02:02 by fgeslin          ###   ########.fr       */
+/*   Updated: 2023/02/07 17:02:47 by fgeslin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,28 @@
 
 void	*g_input;
 
-static void	handler(int signum)
+static void	handler_uint(int signum)
+{
+	static uint32_t	c = 0;
+	static int		count = 0;
+	static int		i = 0;
+
+	c = c << 1;
+	if (signum == SIGUSR1)
+		c++;
+	count = (count + 1) % 32;
+	if (!count)
+	{
+		((uint32_t *)g_input)[i] = c;
+		if (!c)
+			i = 0;
+		else
+			i++;
+		c = 0;
+	}
+}
+
+static void	handler_char(int signum)
 {
 	static char	c = 0;
 	static int	count = 0;
@@ -35,49 +56,55 @@ static void	handler(int signum)
 	}
 }
 
-static void	init_sigs(struct sigaction *sa)
+static void	init_sigs(struct sigaction *sa, void f(int signum))
 {
-	sa->sa_handler = handler;
+	sa->sa_handler = f;
 	sigemptyset(&sa->sa_mask);
-	sa->sa_flags = SA_RESTART; /* Restart functions if interrupted by handler */
+	sa->sa_flags = SA_RESTART;
 	if (sigaction(SIGUSR1, sa, NULL) == -1)
 		exit (-1);
 	if (sigaction(SIGUSR2, sa, NULL) == -1)
 		exit (-1);
 }
 
+void	waiting(struct sigaction *sa)
+{
+	pid_t	client_pid;
+	int		len;
+
+	init_sigs(sa, handler_uint);
+	g_input = calloc(3, sizeof(uint32_t));
+	ft_memset(g_input, -1, 3 * sizeof(uint32_t));
+	while (((uint32_t *)g_input)[2])
+		pause();
+	client_pid = ((uint32_t *)g_input)[0];
+	len = ((uint32_t *)g_input)[1];
+	free (g_input);
+	init_sigs(sa, handler_char);
+	g_input = calloc(len + 1, sizeof(char));
+	ft_memset(g_input, -1, (len + 1) * sizeof(char));
+	while (((char *)g_input)[len])
+		pause();
+	ft_printf("%s\n", (char *)g_input);
+	kill(client_pid, SIGUSR1);
+}
+
 int	main(int argc, char const *argv[])
 {
 	struct sigaction	sa;
 	pid_t				pid;
-	int					len;
 
 	if (argc != 1 || !argv)
 		return (0);
-	init_sigs(&sa);
 	pid = getpid();
-	printf("pid: %d\n", pid);
+	printf(KYEL KBLD "pid:" KWHT " %d" KNRM "\n", pid);
 	while (pid)
 	{
-		// Retrieve Len
-		g_input = calloc(2, sizeof(char));
-		ft_memset(g_input, -1, 2 * sizeof(char));
-		while (((char *)g_input)[1])
-			pause();
-		len = ((char *)g_input)[0];
-	// ft_printf("\nlen:%d\n", len);
-		free (g_input);
-		// Retrieve Str
-		g_input = calloc(len + 1, sizeof(char));
-		ft_memset(g_input, -1, (len + 1) * sizeof(char));
-		while (((char *)g_input)[len])
-			pause();
-		// End
-		ft_printf("%s\n", (char *)g_input);
+		waiting(&sa);
 		if (!ft_strncmp((char *)g_input, "quit", 4))
 		{
 			free (g_input);
-			break;
+			break ;
 		}
 		free (g_input);
 	}
