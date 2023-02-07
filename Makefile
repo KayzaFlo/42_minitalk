@@ -6,7 +6,7 @@
 #    By: fgeslin <fgeslin@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/31 13:26:56 by fgeslin           #+#    #+#              #
-#    Updated: 2023/01/31 13:33:03 by fgeslin          ###   ########.fr        #
+#    Updated: 2023/02/07 11:56:03 by fgeslin          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -40,16 +40,16 @@ CYAN 		:= \033[1;36m
 	@ echo "$(YELLOW)Compiling: $(WHITE)$<"
 	@ ${CC} ${CFLAGS} -c $< -o ${<:.c=.o}
 
-all: $(SERVER) $(CLIENT) # $(LIBFT)
+all: $(SERVER) $(CLIENT) $(LIBFT)
 
 $(SERVER): $(OBJ_SERVER)
 	@ echo "$(GREEN)Compilation ${WHITE}of ${CYAN}$(SERVER) ${WHITE}..."
-	@ $(CC) -o $(SERVER) $(OBJ_SERVER) -lm
+	@ $(CC) -o $(SERVER) $(OBJ_SERVER) $(LIBFT) -lm
 	@ echo "$(CYAN)$(SERVER) $(GREEN)created$(WHITE) ✔️"
 
 $(CLIENT): $(OBJ_CLIENT)
 	@ echo "$(GREEN)Compilation ${WHITE}of ${CYAN}$(CLIENT) ${WHITE}..."
-	@ $(CC) -o $(CLIENT) $(OBJ_CLIENT) -lm
+	@ $(CC) -o $(CLIENT) $(OBJ_CLIENT) $(LIBFT) -lm
 	@ echo "$(CYAN)$(CLIENT) $(GREEN)created$(WHITE) ✔️"
 
 bonus: $(LIBFT) $(OBJ_BONUS)
