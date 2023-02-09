@@ -6,7 +6,7 @@
 /*   By: fgeslin <fgeslin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/31 12:57:33 by fgeslin           #+#    #+#             */
-/*   Updated: 2023/02/07 17:02:47 by fgeslin          ###   ########.fr       */
+/*   Updated: 2023/02/09 12:42:25 by fgeslin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,16 @@
 
 void	*g_input;
 
-static void	handler_uint(int signum)
+static void	handler_uint(int sig, siginfo_t *info, void *ucontext)
 {
 	static uint32_t	c = 0;
 	static int		count = 0;
 	static int		i = 0;
 
+	(void)ucontext;
+	(void)info;
 	c = c << 1;
-	if (signum == SIGUSR1)
+	if (sig == SIGUSR1)
 		c++;
 	count = (count + 1) % 32;
 	if (!count)
@@ -35,14 +37,16 @@ static void	handler_uint(int signum)
 	}
 }
 
-static void	handler_char(int signum)
+static void	handler_char(int sig, siginfo_t *info, void *ucontext)
 {
 	static char	c = 0;
 	static int	count = 0;
 	static int	i = 0;
 
+	(void)ucontext;
+	(void)info;
 	c = c << 1;
-	if (signum == SIGUSR1)
+	if (sig == SIGUSR1)
 		c++;
 	count = (count + 1) % 8;
 	if (!count)
@@ -56,11 +60,11 @@ static void	handler_char(int signum)
 	}
 }
 
-static void	init_sigs(struct sigaction *sa, void f(int signum))
+static void	init_sigs(struct sigaction *sa, void f(int, siginfo_t, void*))
 {
-	sa->sa_handler = f;
 	sigemptyset(&sa->sa_mask);
-	sa->sa_flags = SA_RESTART;
+	sa->sa_flags = SA_SIGINFO;
+	sa->sa_sigaction = f;
 	if (sigaction(SIGUSR1, sa, NULL) == -1)
 		exit (-1);
 	if (sigaction(SIGUSR2, sa, NULL) == -1)
@@ -79,9 +83,8 @@ void	waiting(struct sigaction *sa)
 		pause();
 	client_pid = ((uint32_t *)g_input)[0];
 	len = ((uint32_t *)g_input)[1];
-	free (g_input);
 	init_sigs(sa, handler_char);
-	g_input = calloc(len + 1, sizeof(char));
+	g_input = realloc(g_input, (len + 1) * sizeof(char));
 	ft_memset(g_input, -1, (len + 1) * sizeof(char));
 	while (((char *)g_input)[len])
 		pause();
@@ -102,11 +105,9 @@ int	main(int argc, char const *argv[])
 	{
 		waiting(&sa);
 		if (!ft_strncmp((char *)g_input, "quit", 4))
-		{
-			free (g_input);
 			break ;
-		}
 		free (g_input);
 	}
+	free (g_input);
 	return (0);
 }

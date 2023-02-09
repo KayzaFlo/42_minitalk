@@ -6,7 +6,7 @@
 #    By: fgeslin <fgeslin@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/31 13:26:56 by fgeslin           #+#    #+#              #
-#    Updated: 2023/02/07 11:56:03 by fgeslin          ###   ########.fr        #
+#    Updated: 2023/02/09 12:21:40 by fgeslin          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -40,7 +40,7 @@ CYAN 		:= \033[1;36m
 	@ echo "$(YELLOW)Compiling: $(WHITE)$<"
 	@ ${CC} ${CFLAGS} -c $< -o ${<:.c=.o}
 
-all: $(SERVER) $(CLIENT) $(LIBFT)
+all: $(LIBFT) $(SERVER) $(CLIENT)
 
 $(SERVER): $(OBJ_SERVER)
 	@ echo "$(GREEN)Compilation ${WHITE}of ${CYAN}$(SERVER) ${WHITE}..."
