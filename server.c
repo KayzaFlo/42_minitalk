@@ -6,21 +6,41 @@
 /*   By: fgeslin <fgeslin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/31 12:57:33 by fgeslin           #+#    #+#             */
-/*   Updated: 2023/02/15 17:08:18 by fgeslin          ###   ########.fr       */
+/*   Updated: 2023/02/15 17:31:55 by fgeslin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
 
-static void	temp(char **str, char *byte, pid_t pid)
+char	*ft_strjoin_free(char *s1, char const *s2)
 {
-	*str = ft_strjoin(*str, byte);
+	char	*str;
+	int		s1_size;
+	int		s2_size;
+
+	if (!s1 || !s2)
+		return (NULL);
+	s1_size = ft_strlen(s1);
+	s2_size = ft_strlen(s2);
+	str = malloc((s1_size + s2_size + 1) * sizeof(char));
+	if (str == NULL)
+		return (NULL);
+	ft_strlcpy(str, s1, s1_size + 1);
+	ft_strlcpy(str + s1_size, s2, s1_size + s2_size + 1);
+	free(s1);
+	return (str);
+}
+
+static void	fill_byte(char **str, char *byte, pid_t pid)
+{
+	*str = ft_strjoin_free(*str, byte);
 	if (!*byte && **str)
 	{
 		kill(pid, SIGUSR1);
 		ft_printf("%s\n", *str);
 		free (*str);
 		*str = "";
+		exit (0);
 	}
 	*byte = 0;
 }
@@ -44,7 +64,7 @@ static void	handler_byte(int sig, siginfo_t *info, void *ucontext)
 	byte |= (sig == SIGUSR1);
 	count = (count + 1) % 8;
 	if (!count)
-		temp(&str, &byte, client_pid);
+		fill_byte(&str, &byte, client_pid);
 	kill(client_pid, SIGUSR2);
 }
 
