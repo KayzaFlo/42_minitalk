@@ -6,7 +6,7 @@
 /*   By: fgeslin <fgeslin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/31 12:57:33 by fgeslin           #+#    #+#             */
-/*   Updated: 2023/02/15 17:31:55 by fgeslin          ###   ########.fr       */
+/*   Updated: 2023/02/15 17:32:56 by fgeslin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ static void	fill_byte(char **str, char *byte, pid_t pid)
 		ft_printf("%s\n", *str);
 		free (*str);
 		*str = "";
-		exit (0);
 	}
 	*byte = 0;
 }
